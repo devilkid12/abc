@@ -1,0 +1,53 @@
+Fibonacci Series Using Recursive and Non-Recursive Algorithms
+
+
+#include <iostream>
+using namespace std;
+
+int fibonacci(int n) {
+    if (n <= 1) {
+        return n;
+    }
+
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+int main() {
+    int n;
+
+    cout << "Enter the number of terms: ";
+    cin >> n;
+
+    cout << "Fibonacci Series: ";
+
+    for (int i = 0; i < n; i++) {
+        cout << fibonacci(i) << " ";
+    }
+
+    return 0;
+}
+
+
+
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n;
+    int first = 0, second = 1, next;
+
+    cout << "Enter the number of terms: ";
+    cin >> n;
+
+    cout << "Fibonacci Series: ";
+
+    for (int i = 0; i < n; i++) {
+        cout << first << " ";
+
+        next = first + second;
+        first = second;
+        second = next;
+    }
+
+    return 0;
+}
