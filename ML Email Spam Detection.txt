@@ -1,0 +1,165 @@
+Email Spam Detection Using KNN and SVM
+Aim: To classify emails into two categories—Normal (Not Spam) and Abnormal (Spam)—using K-Nearest Neighbors (KNN) and Support Vector Machine (SVM), and analyze their performance.
+
+A. Binary Classification
+Binary classification is a supervised machine learning technique that classifies data into one of two classes.
+For this practical:
+•	Normal (Not Spam): A legitimate email.
+•	Abnormal (Spam): An unwanted or suspicious email.
+B. K-Nearest Neighbors (KNN)
+KNN classifies a new email based on the classes of its K nearest training examples.
+For example, if K = 5 and three of the five nearest emails are spam, the new email is classified as spam.
+
+C. Support Vector Machine (SVM)
+SVM finds a decision boundary that separates the two classes. It attempts to maximize the margin between the classes.
+For email classification, email text is converted into numerical features before applying SVM.
+D. How do we represent emails numerically?
+Machine learning algorithms cannot directly process raw email text. We can use TF-IDF (Term Frequency–Inverse Document Frequency) to convert text into numerical features based on word importance.
+E. Performance Analysis
+We can compare KNN and SVM using:
+Metric	Meaning
+Accuracy	Percentage of correctly classified emails
+Precision	How many emails predicted as spam were actually spam
+Recall	How many actual spam emails were correctly identified
+F1-score	Harmonic mean of precision and recall
+Confusion matrix	Shows correct and incorrect predictions for both classes
+
+Step 1: Import libraries
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report
+)
+
+Step 2: Load the dataset
+
+df = pd.read_csv(
+    "SMSSpamCollection.csv",
+    sep="\t",
+    header=None,
+    names=["label", "message"]
+)
+
+print(df.head())
+print(df.shape)
+print(df["label"].value_counts())
+
+label	message
+ham	I'll call you later
+spam	Congratulations! You won a prize
+
+Step 3: Separate input and output
+X = df["message"]
+y = df["label"]
+•	X: The text of each message.
+•	y: The class label (ham or spam).
+
+Step 4: Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("Training samples:", X_train.shape[0])
+print("Testing samples:", X_test.shape[0])
+
+Explanation:
+•	80% of the data is used for training.
+•	20% is used for testing.
+•	stratify=y preserves approximately the same proportion of spam and normal messages in both sets.
+
+Step 5: Convert text into numerical features
+Machine learning algorithms cannot directly process text messages. TF-IDF converts the messages into numerical vectors representing the importance of words.
+tfidf = TfidfVectorizer(stop_words="english")
+
+X_train = tfidf.fit_transform(X_train)
+X_test = tfidf.transform(X_test)
+Explanation: TF-IDF gives higher importance to words that are useful for distinguishing messages, rather than words that occur frequently everywhere.
+
+Step 6: Implement K-Nearest Neighbors (KNN)
+KNN classifies a message based on the labels of its nearest training examples. Since TF-IDF vectors are high-dimensional and sparse, we'll use cosine distance to identify similar messages.
+
+knn = KNeighborsClassifier(
+    n_neighbors=5,
+)
+knn.fit(X_train, y_train)
+knn_pred = knn.predict(X_test)
+print("KNN model trained successfully")
+
+Explanation:
+•	n_neighbors=5: Considers the five nearest training messages.
+•	predict(): Classifies the test messages as spam or normal.
+
+Step 7: Implement Support Vector Machine (SVM)
+SVM finds a decision boundary that separates spam messages from normal messages.
+svm = SVC(kernel="linear")
+svm.fit(X_train, y_train)
+svm_pred = svm.predict(X_test)
+print("SVM model trained successfully")
+
+Explanation:
+•	kernel="linear": Uses a linear decision boundary.
+•	fit(): Trains the model.
+•	predict(): Predicts the class of each test message.
+
+Step 8: Evaluate KNN performance
+print("KNN Accuracy:", accuracy_score(y_test, knn_pred))
+
+print("\nKNN Classification Report:")
+print(classification_report(y_test, knn_pred))
+
+print("KNN Confusion Matrix:")
+print(confusion_matrix(y_test, knn_pred))
+
+Step 9: Evaluate SVM performance
+print("SVM Accuracy:", accuracy_score(y_test, svm_pred))
+
+print("\nSVM Classification Report:")
+print(classification_report(y_test, svm_pred))
+
+print("SVM Confusion Matrix:")
+print(confusion_matrix(y_test, svm_pred))
+
+Step 10: Compare both models
+results = pd.DataFrame({
+    "Model": ["KNN", "SVM"],
+    "Accuracy": [
+        accuracy_score(y_test, knn_pred),
+        accuracy_score(y_test, svm_pred)
+    ]
+})
+print(results)
+
+1. What is binary classification?
+It is a supervised learning task in which data is classified into one of two classes.
+2. What is KNN?
+K-Nearest Neighbors classifies a new sample based on the classes of its nearest training samples.
+3. What is SVM?
+Support Vector Machine is a supervised learning algorithm that finds a decision boundary separating different classes.
+4. What is TF-IDF?
+TF-IDF converts text into numerical features based on the importance of words within documents and across the document collection.
+5. Why do we use stratify=y?
+It preserves approximately the same class proportions in the training and testing sets.
+6. What is a confusion matrix?
+It is a table showing correct and incorrect predictions for each class.
+7. What is precision?
+Precision is the proportion of predicted positive samples that are actually positive.
+8. What is recall?
+Recall is the proportion of actual positive samples correctly identified by the model.
+9. Why use a linear kernel in SVM?
+It provides a linear decision boundary and is a reasonable starting point for text classification with TF-IDF features.
+10. How do you determine the better model?
+Compare accuracy, precision, recall, and F1-score, paying particular attention to spam detection performance. The better model depends on the observed test results and the cost of false positives versus missed spam.
+Exam tip: Remember the implementation sequence: Load dataset → Separate text and labels → Split data → Apply TF-IDF → Train KNN and SVM → Evaluate and compare.
+

@@ -1,0 +1,115 @@
+K-Nearest Neighbors (KNN) on Diabetes Dataset
+Aim: To implement the K-Nearest Neighbors algorithm on the diabetes.csv dataset and calculate the confusion matrix, accuracy, error rate, and precision.
+
+Step 1: Import the required libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score
+
+Step 2: Load the dataset
+df = pd.read_csv("diabetes.csv")
+print(df.head())
+print(df.shape)
+
+Step 3: Separate input and output
+•	0 = No diabetes
+•	1 = Diabetes
+
+X = df.drop("Outcome", axis=1)
+y = df["Outcome"]
+
+print("Input shape:", X.shape)
+print("Output shape:", y.shape)
+
+•	X contains the input features, such as Glucose, BMI, and Age.
+•	y contains the target: 0 means non-diabetic and 1 means diabetic.
+Step 4: Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("Training data:", X_train.shape)
+print("Testing data:", X_test.shape)
+
+Step 5: Scale the data
+KNN uses distances to identify neighboring data points, so feature scaling is important.
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+Step 6: Build and train the KNN model
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+print("KNN model trained successfully")
+
+n_neighbors=5 means the model considers the five nearest neighbors to classify a new sample.
+Step 7: Make predictions
+y_pred = knn.predict(X_test)
+
+print("Actual values:")
+print(y_test.values[:10])
+
+print("Predicted values:")
+print(y_pred[:10])
+
+Step 8: Calculate the confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print(cm)
+
+For a binary classifier, the confusion matrix has this structure:
+	Predicted No Diabetes	Predicted Diabetes
+Actual No Diabetes	TN	FP
+Actual Diabetes	FN	TP
+•	TN: Correctly predicted no diabetes.
+•	FP: Predicted diabetes when the actual outcome was no diabetes.
+•	FN: Predicted no diabetes when the actual outcome was diabetes.
+•	TP: Correctly predicted diabetes.
+Step 9: Calculate accuracy, error rate, and precision
+accuracy = accuracy_score(y_test, y_pred)
+error_rate = 1 - accuracy
+precision = precision_score(y_test, y_pred, zero_division=0)
+
+print("Accuracy:", round(accuracy * 100, 2), "%")
+print("Error Rate:", round(error_rate * 100, 2), "%")
+print("Precision:", round(precision, 4))
+
+Metric	Formula
+Accuracy	(TP + TN) / (TP + TN + FP + FN)
+Error Rate	(FP + FN) / (TP + TN + FP + FN)
+Precision	TP / (TP + FP)
+
+Algorithm
+1.	Import the required libraries.
+2.	Load the diabetes dataset.
+3.	Separate the input features and target variable.
+4.	Split the dataset into training and testing sets.
+5.	Handle missing measurements and scale the features.
+6.	Train the KNN classifier with k = 5.
+7.	Predict the test-set outcomes.
+8.	Calculate the confusion matrix, accuracy, error rate, and precision.
+9.	Display the results.
+
+Question	Answer
+What is KNN?	A supervised machine learning algorithm used for classification and regression.
+What does KNN stand for?	K-Nearest Neighbors.
+What is the value of K in this program?	5.
+Why is feature scaling required?	Because KNN uses distances, and features with larger scales can dominate the distance calculation.
+Which distance metric is commonly used?	Euclidean distance.
+What is the target column?	Outcome.
+What is a confusion matrix?	A table that compares actual and predicted classes.
+What is precision?	The proportion of positive predictions that are correct.
+How is the error rate calculated?	1 - accuracy.
+What happens if K is too small?	The model may become sensitive to noise and overfit.
+
+xam tip: Memorize the sequence:
+Load Data → Split → Scale → Create KNN → Train → Predict → Confusion Matrix → Calculate Metrics
+
+

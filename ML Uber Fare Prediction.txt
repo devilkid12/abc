@@ -1,0 +1,225 @@
+Uber Fare Prediction
+Problem Statement: Predict the price of an Uber ride from a given pickup point to the agreed drop-off location. Implement Linear Regression and Random Forest Regression models.
+A. What is Regression?
+Regression is a supervised machine learning technique used to predict a continuous numerical value.
+B. Linear Regression
+Linear Regression predicts a numerical value by fitting a linear relationship between input features and the target variable.
+For a single feature, its equation is: Y = mx + c
+Where: y = predicted fare , x = input feature , c  = intercept , m = coefficient
+C. Random Forest Regression
+Random Forest Regression uses multiple decision trees to predict a numerical value.
+Each tree makes a prediction, and the model averages the predictions from the trees to produce the final result.
+Advantages:
+•	Can learn nonlinear relationships.
+•	Handles complex relationships between features.
+
+Step 1: Import libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+Explanation:
+•	pandas: Loads and processes the dataset.
+•	numpy: Performs numerical calculations.
+•	train_test_split: Divides the dataset into training and testing sets.
+•	LinearRegression: Implements Linear Regression.
+•	RandomForestRegressor: Implements Random Forest Regression.
+•	Evaluation metrics: Measure how accurately the models predict fares
+
+Step 2: Load the dataset
+df = pd.read_csv("uber.csv")
+print(df.head())
+print(df.shape)
+print(df.columns)
+
+Explanation: head() displays the first five rows. shape shows the number of rows and columns.
+
+Step 3: Clean the dataset
+Remove unnecessary columns and invalid records.
+
+df = df.drop(columns=["Unnamed: 0", "key", "pickup_datetime"] , errors="ignore")
+
+df = df.dropna()
+
+df = df[
+    (df["fare_amount"] > 0) &
+    (df["passenger_count"] > 0) &
+    (df["passenger_count"] <= 6) &
+    (df["pickup_longitude"].between(-180, 180)) &
+    (df["dropoff_longitude"].between(-180, 180)) &
+    (df["pickup_latitude"].between(-90, 90)) &
+    (df["dropoff_latitude"].between(-90, 90))
+]
+
+df = df.reset_index(drop=True)
+
+print("Dataset shape after cleaning:", df.shape)
+print(df.head())
+
+•  Removes unnecessary columns.
+•  Removes missing values.
+•  Removes invalid fares and passenger counts.
+•  Restricts coordinates to a broad geographic area around New York City, where this dataset's rides are concentrated.
+•  Resets the row index after cleaning.
+dropna() removes rows containing missing values.
+errors="ignore" prevents an error if an optional column is absent.
+
+Step 4: Calculate the ride distance
+We will calculate the approximate distance between the pickup and drop-off points in kilometres.
+
+lat1 = np.radians(df["pickup_latitude"])
+lon1 = np.radians(df["pickup_longitude"])
+lat2 = np.radians(df["dropoff_latitude"])
+lon2 = np.radians(df["dropoff_longitude"])
+
+dlat = lat2 - lat1
+dlon = lon2 - lon1
+
+a = (
+    np.sin(dlat / 2) ** 2 +
+    np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+)
+
+df["distance_km"] = 6371 * 2 * np.arcsin(np.sqrt(a))
+
+df.head()
+
+Explanation:
+The Haversine formula calculates the great-circle distance between two points on Earth using their latitude and longitude.
+•	6371 is the approximate Earth's radius in kilometres.
+•	distance_km stores the calculated distance.
+Important: This is straight-line distance, not the actual road distance travelled by the Uber vehicle.
+
+Step 4: Select input and output features
+X = df[
+    [
+        "pickup_longitude",
+        "pickup_latitude",
+        "dropoff_longitude",
+        "dropoff_latitude",
+        "passenger_count",
+        "distance_km"
+    ]
+]
+
+y = df["fare_amount"]
+
+print("Input features:")
+print(X.head())
+
+print("\nTarget values:")
+print(y.head())
+
+Explanation:
+•	X contains the input features used to predict the fare.
+•	y contains the actual fare that we want to predict.
+
+Step 6: Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+print("Training data:", X_train.shape)
+print("Testing data:", X_test.shape)
+
+Explanation:
+•	80% of the data is used for training.
+•	20% is used for testing.
+•	random_state=42 makes the split reproducible.
+The models learn from the training data, and we evaluate them on the testing data.
+
+Step 7: Implement Linear Regression
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+lr_pred = lr.predict(X_test)
+print("Linear Regression completed")
+
+Explanation:
+•	LinearRegression() creates the model.
+•	fit() trains the model.
+•	predict() predicts fares for the testing data.
+
+Step 8: Implement Random Forest Regression
+rf = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42,
+    n_jobs=-1
+)
+rf.fit(X_train, y_train)
+rf_pred = rf.predict(X_test)
+print("Random Forest Regression completed")
+
+Explanation:
+•	n_estimators=100 creates a forest of 100 decision trees.
+•	fit() trains the model using the training data.
+•	predict() predicts fares for the testing data.
+•	n_jobs=-1 allows the model to use available CPU cores.
+
+Step 8: Evaluate both models
+print("Linear Regression:")
+print("MAE:", mean_absolute_error(y_test, lr_pred))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, lr_pred)))
+print("R2 Score:", r2_score(y_test, lr_pred))
+
+print("\nRandom Forest Regression:")
+print("MAE:", mean_absolute_error(y_test, rf_pred))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, rf_pred)))
+print("R2 Score:", r2_score(y_test, rf_pred))
+
+Metric	Meaning	Better result
+MAE	Mean Absolute Error; average absolute prediction error	Lower
+RMSE	Root Mean Squared Error; penalizes larger errors more strongly	Lower
+R² Score	Measures how well the model explains variation in fares	Closer to 1
+A negative R² score means the model performs worse than simply predicting the mean fare on the test set.
+Step 10: Display actual and predicted fares
+results = pd.DataFrame({
+    "Actual Fare": y_test.values,
+    "Linear Regression Prediction": lr_pred,
+    "Random Forest Prediction": rf_pred
+})
+
+results.head(10)
+
+1. What is supervised learning?
+Supervised learning trains a model using labelled data containing input features and their corresponding outputs.
+2. Why is this a regression problem?
+Because the target variable, fare_amount, is a continuous numerical value.
+3. What is Linear Regression?
+It is a supervised learning algorithm that predicts numerical values by modelling a linear relationship between input features and the target.
+4. What is Random Forest Regression?
+It is an ensemble learning algorithm that combines predictions from multiple decision trees to predict a numerical value.
+5. What is the difference between Linear Regression and Random Forest Regression?
+Linear Regression	Random Forest Regression
+Models a linear relationship	Can model nonlinear relationships
+Uses coefficients and an intercept	Uses multiple decision trees
+Generally faster to train	Can require more computation
+Simple and interpretable	Can capture more complex patterns
+6. What is the Haversine formula?
+It calculates the great-circle distance between two points on Earth using their latitude and longitude.
+7. Why do we split the dataset into training and testing sets?
+To train the model on one portion of the data and evaluate its performance on unseen data.
+8. What is MAE?
+Mean Absolute Error is the average absolute difference between actual and predicted values.
+9. What is RMSE?
+Root Mean Squared Error is the square root of the average squared prediction error. It penalizes larger errors more heavily.
+10. What is the R² score?
+It measures how well a regression model explains the variation in the target variable. A value closer to 1 generally indicates a better fit.
+11. Why is ride distance important for fare prediction?
+Ride distance is an important feature because the fare generally depends on how far the passenger travels.
+12. What does random_state=42 do?
+It makes the random train-test split reproducible, allowing us to obtain the same split when running the code again under the same conditions.
+________________________________________
+One important exam tip
+For this practical, remember the overall sequence:
+Load dataset → Clean data → Calculate distance → Select X and y → Split data → Train both models → Predict → Evaluate.
+
+
+
+
+
