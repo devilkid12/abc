@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Bank {
+
+    address private accOwner;
+    uint256 balance = 0;
+
+    constructor() {
+        accOwner = msg.sender;
+    }
+
+    // Deposit money
+    function Deposit() public payable {
+        require(accOwner == msg.sender, "You are not the owner");
+        require(msg.value > 0, "Amount must be greater than 0");
+
+        balance += msg.value;
+    }
+
+    // Withdraw money
+    function Withdraw(uint256 amount) public {
+        require(accOwner == msg.sender, "You are not the owner");
+        require(amount > 0, "Amount must be greater than 0");
+        require(amount <= balance, "Insufficient balance");
+
+        balance -= amount;
+
+        (bool success, ) = payable(accOwner).call{value: amount}("");
+        require(success, "Withdrawal failed");
+    }
+
+    // Show balance
+    function showBalance() public view returns (uint256) {
+        require(accOwner == msg.sender, "You are not the owner");
+
+        return balance;
+    }
+}
